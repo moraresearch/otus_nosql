@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  mongo1:
+    image: mongo
+    restart: always
+    entrypoint: 
+      - /usr/bin/mongod
+      - --replSet 
+      - rs1
+      - --shardsvr
+      - --port
+      - "27017"
+      - --bind_ip
+      - "0.0.0.0"
+    networks:
+      - rs
+    ports:
+      - 0.0.0.0:21117:27017
+  mongo2:
+    image: mongo
+    restart: always
+    entrypoint: 
+      - /usr/bin/mongod
+      - --replSet 
+      - rs1
+      - --shardsvr
+      - --port
+      - "27017"
+      - --bind_ip
+      - "0.0.0.0"
+    networks:
+      - rs
+    ports:
+      - 0.0.0.0:21217:27017
+
+  mongo3:
+    image: mongo
+    restart: always
+    entrypoint: 
+      - /usr/bin/mongod
+      - --replSet 
+      - rs1
+      - --shardsvr
+      - --port
+      - "27017"
+      - --bind_ip
+      - "0.0.0.0"
+    networks:
+      - rs
+    ports:
+      - 0.0.0.0:21317:27017
+
+networks:
+  rs:
+    driver: bridge

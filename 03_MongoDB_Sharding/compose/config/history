@@ -1,0 +1,1 @@
+rs.initiate({"_id":"rsconf", configsvr: true, members : [{"_id": 1, host: "10.100.100.83:23117"},{"_id": 2, host: "10.100.100.83:23217"},{"_id": 3, host: "10.100.100.83:23317"}]});

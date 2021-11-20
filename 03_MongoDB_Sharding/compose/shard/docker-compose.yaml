@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  mongos:
+    image: mongo
+    restart: always
+    entrypoint: 
+      - /bin/mongos
+      - --configdb 
+      - rsconf/10.100.100.83:23117,10.100.100.83:23217,10.100.100.83:23317
+      - --port
+      - "27017"
+      - --bind_ip
+      - "0.0.0.0"
+    networks:
+      - config_rs
+    ports:
+      - 0.0.0.0:24117:27017
+
+networks:
+  config_rs:
+    external: true
+    name: config_rs
+
