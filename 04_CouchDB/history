@@ -1,0 +1,5 @@
+docker run --name nginx -p 80:80 -v /home/mora/git/otus_nosql/04_CouchDB/:/usr/share/nginx/html -d nginx
+docker run -d --name couchdb --restart always -p 5984:5984 couchdb:2
+curl -X PUT http://localhost:5984/rep1
+curl -X PUT http://127.0.0.1:5984/rep1/01 -d  {"name": "mora"} 
+http://localhost:5984/_utils/#_config/nonode@nohost/cors
