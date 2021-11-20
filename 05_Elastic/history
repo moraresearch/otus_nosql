@@ -1,0 +1,5 @@
+curl -X PUT http://localhost:9200/test
+curl -X POST http://localhost:9200/test/_doc/ -H Content-Type: application/json -d {"content": "рама была отмыта и вылизана котом"}
+curl -X POST http://localhost:9200/test/_doc/ -H Content-Type: application/json -d {"content": "мама мыла раму"}
+curl -X POST http://localhost:9200/test/_doc/ -H Content-Type: application/json -d {"content": "моя мама мыла посуду а кот жевал сосиски"}
+curl -X GET http://localhost:9200/_search/ -H 'Content-Type: application/json' -d '{"query":{"match":{"content":{"fuzziness": "auto", "query": "мама ела сосиски"}}}}' | jq
