@@ -1,0 +1,1284 @@
+mongos> sh.status()
+--- Sharding Status --- 
+  sharding version: {
+  	"_id" : 1,
+  	"minCompatibleVersion" : 5,
+  	"currentVersion" : 6,
+  	"clusterId" : ObjectId("6198b8650226898cf5235e1d")
+  }
+  shards:
+        {  "_id" : "rs1",  "host" : "rs1/10.100.100.83:21117,10.100.100.83:21217,10.100.100.83:21317",  "state" : 1,  "topologyTime" : Timestamp(1637399330, 1) }
+        {  "_id" : "rs2",  "host" : "rs2/10.100.100.83:22117,10.100.100.83:22217,10.100.100.83:22317",  "state" : 1,  "topologyTime" : Timestamp(1637399566, 1) }
+  active mongoses:
+        "5.0.4" : 1
+  autosplit:
+        Currently enabled: yes
+  balancer:
+        Currently enabled: yes
+        Currently running: no
+        Failed balancer rounds in last 5 attempts: 0
+        Migration results for the last 24 hours: 
+                40 : Success
+  databases:
+        {  "_id" : "config",  "primary" : "config",  "partitioned" : true }
+                config.system.sessions
+                        shard key: { "_id" : 1 }
+                        unique: false
+                        balancing: true
+                        chunks:
+                                rs1	984
+                                rs2	40
+                        too many chunks to print, use verbose if you want to force print
+mongos> use bank
+switched to db bank
+mongos> sh.enableSharding("bank")
+{
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637399640, 3),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637399640, 2)
+}
+mongos> use config
+switched to db config
+mongos> db.settings.save({ _id:"chunksize", value: 1})
+WriteResult({ "nMatched" : 0, "nUpserted" : 1, "nModified" : 0, "_id" : "chunksize" })
+mongos> use bank
+switched to db bank
+mongos> for (var i=0; i<210000; i++) { db.tickets.insert({name: "Max ammout of cost tickets", amount: Math.random()*100}) }
+WriteResult({ "nInserted" : 1 })
+mongos> db.tickets.createIndex({amount: 1})
+{
+	"raw" : {
+		"rs2/10.100.100.83:22117,10.100.100.83:22217,10.100.100.83:22317" : {
+			"numIndexesBefore" : 1,
+			"numIndexesAfter" : 2,
+			"createdCollectionAutomatically" : false,
+			"commitQuorum" : "votingMembers",
+			"ok" : 1
+		}
+	},
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637401545, 5),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637401545, 5)
+}
+mongos> db.tickets.stats()
+{
+	"sharded" : false,
+	"primary" : "rs2",
+	"capped" : false,
+	"wiredTiger" : {
+		"metadata" : {
+			"formatVersion" : 1
+		},
+		"creationString" : "access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=1),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=snappy,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(enabled=false,file_metadata=,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=4KB,key_format=q,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,leaf_value_max=64MB,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=10m,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,readonly=false,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_object=false,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=10M),type=file,value_format=u,verbose=[],write_timestamp_usage=none",
+		"type" : "file",
+		"uri" : "statistics:table:collection-37-5960004222346171514",
+		"LSM" : {
+			"bloom filter false positives" : 0,
+			"bloom filter hits" : 0,
+			"bloom filter misses" : 0,
+			"bloom filter pages evicted from cache" : 0,
+			"bloom filter pages read into cache" : 0,
+			"bloom filters in the LSM tree" : 0,
+			"chunks in the LSM tree" : 0,
+			"highest merge generation in the LSM tree" : 0,
+			"queries that could have benefited from a Bloom filter that did not exist" : 0,
+			"sleep for LSM checkpoint throttle" : 0,
+			"sleep for LSM merge throttle" : 0,
+			"total size of bloom filters" : 0
+		},
+		"block-manager" : {
+			"allocations requiring file extension" : 443,
+			"blocks allocated" : 1414,
+			"blocks freed" : 1031,
+			"checkpoint size" : 5627904,
+			"file allocation unit size" : 4096,
+			"file bytes available for reuse" : 1433600,
+			"file magic number" : 120897,
+			"file major version number" : 1,
+			"file size in bytes" : 7077888,
+			"minor version number" : 0
+		},
+		"btree" : {
+			"btree checkpoint generation" : 38,
+			"btree clean tree checkpoint expiration time" : NumberLong("9223372036854775807"),
+			"btree compact pages reviewed" : 0,
+			"btree compact pages selected to be rewritten" : 0,
+			"btree compact pages skipped" : 0,
+			"btree skipped by compaction as process would not reduce size" : 0,
+			"column-store fixed-size leaf pages" : 0,
+			"column-store internal pages" : 0,
+			"column-store variable-size RLE encoded values" : 0,
+			"column-store variable-size deleted values" : 0,
+			"column-store variable-size leaf pages" : 0,
+			"fixed-record size" : 0,
+			"maximum internal page key size" : 368,
+			"maximum internal page size" : 4096,
+			"maximum leaf page key size" : 2867,
+			"maximum leaf page size" : 32768,
+			"maximum leaf page value size" : 67108864,
+			"maximum tree depth" : 3,
+			"number of key/value pairs" : 0,
+			"overflow pages" : 0,
+			"pages rewritten by compaction" : 0,
+			"row-store empty values" : 0,
+			"row-store internal pages" : 0,
+			"row-store leaf pages" : 0
+		},
+		"cache" : {
+			"bytes currently in the cache" : 26983430,
+			"bytes dirty in the cache cumulative" : 12280687,
+			"bytes read into cache" : 8205641,
+			"bytes written from cache" : 75323104,
+			"checkpoint blocked page eviction" : 0,
+			"checkpoint of history store file blocked non-history store page eviction" : 0,
+			"data source pages selected for eviction unable to be evicted" : 0,
+			"eviction gave up due to detecting an out of order on disk value behind the last update on the chain" : 0,
+			"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update" : 0,
+			"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update after validating the update chain" : 0,
+			"eviction gave up due to detecting out of order timestamps on the update chain after the selected on disk update" : 0,
+			"eviction walk passes of a file" : 25,
+			"eviction walk target pages histogram - 0-9" : 1,
+			"eviction walk target pages histogram - 10-31" : 0,
+			"eviction walk target pages histogram - 128 and higher" : 0,
+			"eviction walk target pages histogram - 32-63" : 24,
+			"eviction walk target pages histogram - 64-128" : 0,
+			"eviction walk target pages reduced due to history store cache pressure" : 0,
+			"eviction walks abandoned" : 0,
+			"eviction walks gave up because they restarted their walk twice" : 25,
+			"eviction walks gave up because they saw too many pages and found no candidates" : 0,
+			"eviction walks gave up because they saw too many pages and found too few candidates" : 0,
+			"eviction walks reached end of tree" : 50,
+			"eviction walks restarted" : 0,
+			"eviction walks started from root of tree" : 25,
+			"eviction walks started from saved location in tree" : 0,
+			"hazard pointer blocked page eviction" : 0,
+			"history store table insert calls" : 0,
+			"history store table insert calls that returned restart" : 0,
+			"history store table out-of-order resolved updates that lose their durable timestamp" : 0,
+			"history store table out-of-order updates that were fixed up by reinserting with the fixed timestamp" : 0,
+			"history store table reads" : 0,
+			"history store table reads missed" : 0,
+			"history store table reads requiring squashed modifies" : 0,
+			"history store table truncation by rollback to stable to remove an unstable update" : 0,
+			"history store table truncation by rollback to stable to remove an update" : 0,
+			"history store table truncation to remove an update" : 0,
+			"history store table truncation to remove range of updates due to key being removed from the data page during reconciliation" : 0,
+			"history store table truncation to remove range of updates due to out-of-order timestamp update on data page" : 0,
+			"history store table writes requiring squashed modifies" : 0,
+			"in-memory page passed criteria to be split" : 6,
+			"in-memory page splits" : 3,
+			"internal pages evicted" : 0,
+			"internal pages split during eviction" : 0,
+			"leaf pages split during eviction" : 1,
+			"modified pages evicted" : 1,
+			"overflow pages read into cache" : 0,
+			"page split during eviction deepened the tree" : 0,
+			"page written requiring history store records" : 0,
+			"pages read into cache" : 132,
+			"pages read into cache after truncate" : 1,
+			"pages read into cache after truncate in prepare state" : 0,
+			"pages requested from the cache" : 210347,
+			"pages seen by eviction walk" : 100,
+			"pages written from cache" : 1370,
+			"pages written requiring in-memory restoration" : 0,
+			"the number of times full update inserted to history store" : 0,
+			"the number of times reverse modify inserted to history store" : 0,
+			"tracked dirty bytes in the cache" : 0,
+			"unmodified pages evicted" : 131
+		},
+		"cache_walk" : {
+			"Average difference between current eviction generation when the page was last considered" : 0,
+			"Average on-disk page image size seen" : 0,
+			"Average time in cache for pages that have been visited by the eviction server" : 0,
+			"Average time in cache for pages that have not been visited by the eviction server" : 0,
+			"Clean pages currently in cache" : 0,
+			"Current eviction generation" : 0,
+			"Dirty pages currently in cache" : 0,
+			"Entries in the root page" : 0,
+			"Internal pages currently in cache" : 0,
+			"Leaf pages currently in cache" : 0,
+			"Maximum difference between current eviction generation when the page was last considered" : 0,
+			"Maximum page size seen" : 0,
+			"Minimum on-disk page image size seen" : 0,
+			"Number of pages never visited by eviction server" : 0,
+			"On-disk page image sizes smaller than a single allocation unit" : 0,
+			"Pages created in memory and never written" : 0,
+			"Pages currently queued for eviction" : 0,
+			"Pages that could not be queued for eviction" : 0,
+			"Refs skipped during cache traversal" : 0,
+			"Size of the root page" : 0,
+			"Total number of pages currently in cache" : 0
+		},
+		"checkpoint-cleanup" : {
+			"pages added for eviction" : 0,
+			"pages removed" : 0,
+			"pages skipped during tree walk" : 640,
+			"pages visited" : 688
+		},
+		"compression" : {
+			"compressed page maximum internal page size prior to compression" : 4096,
+			"compressed page maximum leaf page size prior to compression " : 131072,
+			"compressed pages read" : 132,
+			"compressed pages written" : 1317,
+			"page written failed to compress" : 0,
+			"page written was too small to compress" : 53
+		},
+		"cursor" : {
+			"Total number of entries skipped by cursor next calls" : 0,
+			"Total number of entries skipped by cursor prev calls" : 0,
+			"Total number of entries skipped to position the history store cursor" : 0,
+			"Total number of times a search near has exited due to prefix config" : 0,
+			"bulk loaded cursor insert calls" : 0,
+			"cache cursors reuse count" : 209998,
+			"close calls that result in cache" : 210003,
+			"create calls" : 9,
+			"cursor next calls that skip due to a globally visible history store tombstone" : 0,
+			"cursor next calls that skip greater than or equal to 100 entries" : 0,
+			"cursor next calls that skip less than 100 entries" : 210003,
+			"cursor prev calls that skip due to a globally visible history store tombstone" : 0,
+			"cursor prev calls that skip greater than or equal to 100 entries" : 0,
+			"cursor prev calls that skip less than 100 entries" : 1,
+			"insert calls" : 210000,
+			"insert key and value bytes" : 16507635,
+			"modify" : 0,
+			"modify key and value bytes affected" : 0,
+			"modify value bytes modified" : 0,
+			"next calls" : 210003,
+			"open cursor count" : 0,
+			"operation restarted" : 0,
+			"prev calls" : 1,
+			"remove calls" : 0,
+			"remove key bytes removed" : 0,
+			"reserve calls" : 0,
+			"reset calls" : 420217,
+			"search calls" : 0,
+			"search history store calls" : 0,
+			"search near calls" : 210,
+			"truncate calls" : 0,
+			"update calls" : 0,
+			"update key and value bytes" : 0,
+			"update value size change" : 0
+		},
+		"reconciliation" : {
+			"approximate byte size of timestamps in pages written" : 12264736,
+			"approximate byte size of transaction IDs in pages written" : 0,
+			"dictionary matches" : 0,
+			"fast-path pages deleted" : 0,
+			"internal page key bytes discarded using suffix compression" : 1349,
+			"internal page multi-block writes" : 13,
+			"internal-page overflow keys" : 0,
+			"leaf page key bytes discarded using prefix compression" : 0,
+			"leaf page multi-block writes" : 25,
+			"leaf-page overflow keys" : 0,
+			"maximum blocks required for a page" : 1,
+			"overflow values written" : 0,
+			"page checksum matches" : 0,
+			"page reconciliation calls" : 60,
+			"page reconciliation calls for eviction" : 0,
+			"pages deleted" : 0,
+			"pages written including an aggregated newest start durable timestamp " : 41,
+			"pages written including an aggregated newest stop durable timestamp " : 0,
+			"pages written including an aggregated newest stop timestamp " : 0,
+			"pages written including an aggregated newest stop transaction ID" : 0,
+			"pages written including an aggregated newest transaction ID " : 0,
+			"pages written including an aggregated oldest start timestamp " : 41,
+			"pages written including an aggregated prepare" : 0,
+			"pages written including at least one prepare" : 0,
+			"pages written including at least one start durable timestamp" : 1296,
+			"pages written including at least one start timestamp" : 1296,
+			"pages written including at least one start transaction ID" : 0,
+			"pages written including at least one stop durable timestamp" : 0,
+			"pages written including at least one stop timestamp" : 0,
+			"pages written including at least one stop transaction ID" : 0,
+			"records written including a prepare" : 0,
+			"records written including a start durable timestamp" : 766546,
+			"records written including a start timestamp" : 766546,
+			"records written including a start transaction ID" : 0,
+			"records written including a stop durable timestamp" : 0,
+			"records written including a stop timestamp" : 0,
+			"records written including a stop transaction ID" : 0
+		},
+		"session" : {
+			"object compaction" : 0,
+			"tiered operations dequeued and processed" : 0,
+			"tiered operations scheduled" : 0,
+			"tiered storage local retention time (secs)" : 0,
+			"tiered storage object size" : 0
+		},
+		"transaction" : {
+			"race to read prepared update retry" : 0,
+			"rollback to stable history store records with stop timestamps older than newer records" : 0,
+			"rollback to stable inconsistent checkpoint" : 0,
+			"rollback to stable keys removed" : 0,
+			"rollback to stable keys restored" : 0,
+			"rollback to stable restored tombstones from history store" : 0,
+			"rollback to stable restored updates from history store" : 0,
+			"rollback to stable skipping delete rle" : 0,
+			"rollback to stable skipping stable rle" : 0,
+			"rollback to stable sweeping history store keys" : 0,
+			"rollback to stable updates removed from history store" : 0,
+			"transaction checkpoints due to obsolete pages" : 0,
+			"update conflicts" : 0
+		}
+	},
+	"ns" : "bank.tickets",
+	"count" : 210000,
+	"size" : 15750000,
+	"storageSize" : 7077888,
+	"totalIndexSize" : 11448320,
+	"totalSize" : 18526208,
+	"indexSizes" : {
+		"_id_" : 7696384,
+		"amount_1" : 3751936
+	},
+	"avgObjSize" : 75,
+	"maxSize" : NumberLong(0),
+	"nindexes" : 2,
+	"scaleFactor" : 1,
+	"nchunks" : 1,
+	"shards" : {
+		"rs2" : {
+			"ns" : "bank.tickets",
+			"size" : 15750000,
+			"count" : 210000,
+			"avgObjSize" : 75,
+			"storageSize" : 7077888,
+			"freeStorageSize" : 1433600,
+			"capped" : false,
+			"wiredTiger" : {
+				"metadata" : {
+					"formatVersion" : 1
+				},
+				"creationString" : "access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=1),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=snappy,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(enabled=false,file_metadata=,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=4KB,key_format=q,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=32KB,leaf_value_max=64MB,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=10m,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=false,prefix_compression_min=4,readonly=false,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_object=false,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=10M),type=file,value_format=u,verbose=[],write_timestamp_usage=none",
+				"type" : "file",
+				"uri" : "statistics:table:collection-37-5960004222346171514",
+				"LSM" : {
+					"bloom filter false positives" : 0,
+					"bloom filter hits" : 0,
+					"bloom filter misses" : 0,
+					"bloom filter pages evicted from cache" : 0,
+					"bloom filter pages read into cache" : 0,
+					"bloom filters in the LSM tree" : 0,
+					"chunks in the LSM tree" : 0,
+					"highest merge generation in the LSM tree" : 0,
+					"queries that could have benefited from a Bloom filter that did not exist" : 0,
+					"sleep for LSM checkpoint throttle" : 0,
+					"sleep for LSM merge throttle" : 0,
+					"total size of bloom filters" : 0
+				},
+				"block-manager" : {
+					"allocations requiring file extension" : 443,
+					"blocks allocated" : 1414,
+					"blocks freed" : 1031,
+					"checkpoint size" : 5627904,
+					"file allocation unit size" : 4096,
+					"file bytes available for reuse" : 1433600,
+					"file magic number" : 120897,
+					"file major version number" : 1,
+					"file size in bytes" : 7077888,
+					"minor version number" : 0
+				},
+				"btree" : {
+					"btree checkpoint generation" : 38,
+					"btree clean tree checkpoint expiration time" : NumberLong("9223372036854775807"),
+					"btree compact pages reviewed" : 0,
+					"btree compact pages selected to be rewritten" : 0,
+					"btree compact pages skipped" : 0,
+					"btree skipped by compaction as process would not reduce size" : 0,
+					"column-store fixed-size leaf pages" : 0,
+					"column-store internal pages" : 0,
+					"column-store variable-size RLE encoded values" : 0,
+					"column-store variable-size deleted values" : 0,
+					"column-store variable-size leaf pages" : 0,
+					"fixed-record size" : 0,
+					"maximum internal page key size" : 368,
+					"maximum internal page size" : 4096,
+					"maximum leaf page key size" : 2867,
+					"maximum leaf page size" : 32768,
+					"maximum leaf page value size" : 67108864,
+					"maximum tree depth" : 3,
+					"number of key/value pairs" : 0,
+					"overflow pages" : 0,
+					"pages rewritten by compaction" : 0,
+					"row-store empty values" : 0,
+					"row-store internal pages" : 0,
+					"row-store leaf pages" : 0
+				},
+				"cache" : {
+					"bytes currently in the cache" : 26983430,
+					"bytes dirty in the cache cumulative" : 12280687,
+					"bytes read into cache" : 8205641,
+					"bytes written from cache" : 75323104,
+					"checkpoint blocked page eviction" : 0,
+					"checkpoint of history store file blocked non-history store page eviction" : 0,
+					"data source pages selected for eviction unable to be evicted" : 0,
+					"eviction gave up due to detecting an out of order on disk value behind the last update on the chain" : 0,
+					"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update" : 0,
+					"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update after validating the update chain" : 0,
+					"eviction gave up due to detecting out of order timestamps on the update chain after the selected on disk update" : 0,
+					"eviction walk passes of a file" : 25,
+					"eviction walk target pages histogram - 0-9" : 1,
+					"eviction walk target pages histogram - 10-31" : 0,
+					"eviction walk target pages histogram - 128 and higher" : 0,
+					"eviction walk target pages histogram - 32-63" : 24,
+					"eviction walk target pages histogram - 64-128" : 0,
+					"eviction walk target pages reduced due to history store cache pressure" : 0,
+					"eviction walks abandoned" : 0,
+					"eviction walks gave up because they restarted their walk twice" : 25,
+					"eviction walks gave up because they saw too many pages and found no candidates" : 0,
+					"eviction walks gave up because they saw too many pages and found too few candidates" : 0,
+					"eviction walks reached end of tree" : 50,
+					"eviction walks restarted" : 0,
+					"eviction walks started from root of tree" : 25,
+					"eviction walks started from saved location in tree" : 0,
+					"hazard pointer blocked page eviction" : 0,
+					"history store table insert calls" : 0,
+					"history store table insert calls that returned restart" : 0,
+					"history store table out-of-order resolved updates that lose their durable timestamp" : 0,
+					"history store table out-of-order updates that were fixed up by reinserting with the fixed timestamp" : 0,
+					"history store table reads" : 0,
+					"history store table reads missed" : 0,
+					"history store table reads requiring squashed modifies" : 0,
+					"history store table truncation by rollback to stable to remove an unstable update" : 0,
+					"history store table truncation by rollback to stable to remove an update" : 0,
+					"history store table truncation to remove an update" : 0,
+					"history store table truncation to remove range of updates due to key being removed from the data page during reconciliation" : 0,
+					"history store table truncation to remove range of updates due to out-of-order timestamp update on data page" : 0,
+					"history store table writes requiring squashed modifies" : 0,
+					"in-memory page passed criteria to be split" : 6,
+					"in-memory page splits" : 3,
+					"internal pages evicted" : 0,
+					"internal pages split during eviction" : 0,
+					"leaf pages split during eviction" : 1,
+					"modified pages evicted" : 1,
+					"overflow pages read into cache" : 0,
+					"page split during eviction deepened the tree" : 0,
+					"page written requiring history store records" : 0,
+					"pages read into cache" : 132,
+					"pages read into cache after truncate" : 1,
+					"pages read into cache after truncate in prepare state" : 0,
+					"pages requested from the cache" : 210347,
+					"pages seen by eviction walk" : 100,
+					"pages written from cache" : 1370,
+					"pages written requiring in-memory restoration" : 0,
+					"the number of times full update inserted to history store" : 0,
+					"the number of times reverse modify inserted to history store" : 0,
+					"tracked dirty bytes in the cache" : 0,
+					"unmodified pages evicted" : 131
+				},
+				"cache_walk" : {
+					"Average difference between current eviction generation when the page was last considered" : 0,
+					"Average on-disk page image size seen" : 0,
+					"Average time in cache for pages that have been visited by the eviction server" : 0,
+					"Average time in cache for pages that have not been visited by the eviction server" : 0,
+					"Clean pages currently in cache" : 0,
+					"Current eviction generation" : 0,
+					"Dirty pages currently in cache" : 0,
+					"Entries in the root page" : 0,
+					"Internal pages currently in cache" : 0,
+					"Leaf pages currently in cache" : 0,
+					"Maximum difference between current eviction generation when the page was last considered" : 0,
+					"Maximum page size seen" : 0,
+					"Minimum on-disk page image size seen" : 0,
+					"Number of pages never visited by eviction server" : 0,
+					"On-disk page image sizes smaller than a single allocation unit" : 0,
+					"Pages created in memory and never written" : 0,
+					"Pages currently queued for eviction" : 0,
+					"Pages that could not be queued for eviction" : 0,
+					"Refs skipped during cache traversal" : 0,
+					"Size of the root page" : 0,
+					"Total number of pages currently in cache" : 0
+				},
+				"checkpoint-cleanup" : {
+					"pages added for eviction" : 0,
+					"pages removed" : 0,
+					"pages skipped during tree walk" : 640,
+					"pages visited" : 688
+				},
+				"compression" : {
+					"compressed page maximum internal page size prior to compression" : 4096,
+					"compressed page maximum leaf page size prior to compression " : 131072,
+					"compressed pages read" : 132,
+					"compressed pages written" : 1317,
+					"page written failed to compress" : 0,
+					"page written was too small to compress" : 53
+				},
+				"cursor" : {
+					"Total number of entries skipped by cursor next calls" : 0,
+					"Total number of entries skipped by cursor prev calls" : 0,
+					"Total number of entries skipped to position the history store cursor" : 0,
+					"Total number of times a search near has exited due to prefix config" : 0,
+					"bulk loaded cursor insert calls" : 0,
+					"cache cursors reuse count" : 209998,
+					"close calls that result in cache" : 210003,
+					"create calls" : 9,
+					"cursor next calls that skip due to a globally visible history store tombstone" : 0,
+					"cursor next calls that skip greater than or equal to 100 entries" : 0,
+					"cursor next calls that skip less than 100 entries" : 210003,
+					"cursor prev calls that skip due to a globally visible history store tombstone" : 0,
+					"cursor prev calls that skip greater than or equal to 100 entries" : 0,
+					"cursor prev calls that skip less than 100 entries" : 1,
+					"insert calls" : 210000,
+					"insert key and value bytes" : 16507635,
+					"modify" : 0,
+					"modify key and value bytes affected" : 0,
+					"modify value bytes modified" : 0,
+					"next calls" : 210003,
+					"open cursor count" : 0,
+					"operation restarted" : 0,
+					"prev calls" : 1,
+					"remove calls" : 0,
+					"remove key bytes removed" : 0,
+					"reserve calls" : 0,
+					"reset calls" : 420217,
+					"search calls" : 0,
+					"search history store calls" : 0,
+					"search near calls" : 210,
+					"truncate calls" : 0,
+					"update calls" : 0,
+					"update key and value bytes" : 0,
+					"update value size change" : 0
+				},
+				"reconciliation" : {
+					"approximate byte size of timestamps in pages written" : 12264736,
+					"approximate byte size of transaction IDs in pages written" : 0,
+					"dictionary matches" : 0,
+					"fast-path pages deleted" : 0,
+					"internal page key bytes discarded using suffix compression" : 1349,
+					"internal page multi-block writes" : 13,
+					"internal-page overflow keys" : 0,
+					"leaf page key bytes discarded using prefix compression" : 0,
+					"leaf page multi-block writes" : 25,
+					"leaf-page overflow keys" : 0,
+					"maximum blocks required for a page" : 1,
+					"overflow values written" : 0,
+					"page checksum matches" : 0,
+					"page reconciliation calls" : 60,
+					"page reconciliation calls for eviction" : 0,
+					"pages deleted" : 0,
+					"pages written including an aggregated newest start durable timestamp " : 41,
+					"pages written including an aggregated newest stop durable timestamp " : 0,
+					"pages written including an aggregated newest stop timestamp " : 0,
+					"pages written including an aggregated newest stop transaction ID" : 0,
+					"pages written including an aggregated newest transaction ID " : 0,
+					"pages written including an aggregated oldest start timestamp " : 41,
+					"pages written including an aggregated prepare" : 0,
+					"pages written including at least one prepare" : 0,
+					"pages written including at least one start durable timestamp" : 1296,
+					"pages written including at least one start timestamp" : 1296,
+					"pages written including at least one start transaction ID" : 0,
+					"pages written including at least one stop durable timestamp" : 0,
+					"pages written including at least one stop timestamp" : 0,
+					"pages written including at least one stop transaction ID" : 0,
+					"records written including a prepare" : 0,
+					"records written including a start durable timestamp" : 766546,
+					"records written including a start timestamp" : 766546,
+					"records written including a start transaction ID" : 0,
+					"records written including a stop durable timestamp" : 0,
+					"records written including a stop timestamp" : 0,
+					"records written including a stop transaction ID" : 0
+				},
+				"session" : {
+					"object compaction" : 0,
+					"tiered operations dequeued and processed" : 0,
+					"tiered operations scheduled" : 0,
+					"tiered storage local retention time (secs)" : 0,
+					"tiered storage object size" : 0
+				},
+				"transaction" : {
+					"race to read prepared update retry" : 0,
+					"rollback to stable history store records with stop timestamps older than newer records" : 0,
+					"rollback to stable inconsistent checkpoint" : 0,
+					"rollback to stable keys removed" : 0,
+					"rollback to stable keys restored" : 0,
+					"rollback to stable restored tombstones from history store" : 0,
+					"rollback to stable restored updates from history store" : 0,
+					"rollback to stable skipping delete rle" : 0,
+					"rollback to stable skipping stable rle" : 0,
+					"rollback to stable sweeping history store keys" : 0,
+					"rollback to stable updates removed from history store" : 0,
+					"transaction checkpoints due to obsolete pages" : 0,
+					"update conflicts" : 0
+				}
+			},
+			"nindexes" : 2,
+			"indexDetails" : {
+				"_id_" : {
+					"metadata" : {
+						"formatVersion" : 8
+					},
+					"creationString" : "access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=8),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(enabled=false,file_metadata=,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=16k,key_format=u,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=16k,leaf_value_max=0,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=5MB,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=true,prefix_compression_min=4,readonly=false,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_object=false,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=10M),type=file,value_format=u,verbose=[],write_timestamp_usage=none",
+					"type" : "file",
+					"uri" : "statistics:table:index-38-5960004222346171514",
+					"LSM" : {
+						"bloom filter false positives" : 0,
+						"bloom filter hits" : 0,
+						"bloom filter misses" : 0,
+						"bloom filter pages evicted from cache" : 0,
+						"bloom filter pages read into cache" : 0,
+						"bloom filters in the LSM tree" : 0,
+						"chunks in the LSM tree" : 0,
+						"highest merge generation in the LSM tree" : 0,
+						"queries that could have benefited from a Bloom filter that did not exist" : 0,
+						"sleep for LSM checkpoint throttle" : 0,
+						"sleep for LSM merge throttle" : 0,
+						"total size of bloom filters" : 0
+					},
+					"block-manager" : {
+						"allocations requiring file extension" : 924,
+						"blocks allocated" : 2516,
+						"blocks freed" : 1664,
+						"checkpoint size" : 6475776,
+						"file allocation unit size" : 4096,
+						"file bytes available for reuse" : 1204224,
+						"file magic number" : 120897,
+						"file major version number" : 1,
+						"file size in bytes" : 7696384,
+						"minor version number" : 0
+					},
+					"btree" : {
+						"btree checkpoint generation" : 38,
+						"btree clean tree checkpoint expiration time" : NumberLong("9223372036854775807"),
+						"btree compact pages reviewed" : 0,
+						"btree compact pages selected to be rewritten" : 0,
+						"btree compact pages skipped" : 0,
+						"btree skipped by compaction as process would not reduce size" : 0,
+						"column-store fixed-size leaf pages" : 0,
+						"column-store internal pages" : 0,
+						"column-store variable-size RLE encoded values" : 0,
+						"column-store variable-size deleted values" : 0,
+						"column-store variable-size leaf pages" : 0,
+						"fixed-record size" : 0,
+						"maximum internal page key size" : 1474,
+						"maximum internal page size" : 16384,
+						"maximum leaf page key size" : 1474,
+						"maximum leaf page size" : 16384,
+						"maximum leaf page value size" : 7372,
+						"maximum tree depth" : 3,
+						"number of key/value pairs" : 0,
+						"overflow pages" : 0,
+						"pages rewritten by compaction" : 0,
+						"row-store empty values" : 0,
+						"row-store internal pages" : 0,
+						"row-store leaf pages" : 0
+					},
+					"cache" : {
+						"bytes currently in the cache" : 14702406,
+						"bytes dirty in the cache cumulative" : 46345834,
+						"bytes read into cache" : 0,
+						"bytes written from cache" : 17136785,
+						"checkpoint blocked page eviction" : 0,
+						"checkpoint of history store file blocked non-history store page eviction" : 0,
+						"data source pages selected for eviction unable to be evicted" : 0,
+						"eviction gave up due to detecting an out of order on disk value behind the last update on the chain" : 0,
+						"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update" : 0,
+						"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update after validating the update chain" : 0,
+						"eviction gave up due to detecting out of order timestamps on the update chain after the selected on disk update" : 0,
+						"eviction walk passes of a file" : 25,
+						"eviction walk target pages histogram - 0-9" : 1,
+						"eviction walk target pages histogram - 10-31" : 0,
+						"eviction walk target pages histogram - 128 and higher" : 0,
+						"eviction walk target pages histogram - 32-63" : 24,
+						"eviction walk target pages histogram - 64-128" : 0,
+						"eviction walk target pages reduced due to history store cache pressure" : 0,
+						"eviction walks abandoned" : 0,
+						"eviction walks gave up because they restarted their walk twice" : 25,
+						"eviction walks gave up because they saw too many pages and found no candidates" : 0,
+						"eviction walks gave up because they saw too many pages and found too few candidates" : 0,
+						"eviction walks reached end of tree" : 50,
+						"eviction walks restarted" : 0,
+						"eviction walks started from root of tree" : 25,
+						"eviction walks started from saved location in tree" : 0,
+						"hazard pointer blocked page eviction" : 0,
+						"history store table insert calls" : 0,
+						"history store table insert calls that returned restart" : 0,
+						"history store table out-of-order resolved updates that lose their durable timestamp" : 0,
+						"history store table out-of-order updates that were fixed up by reinserting with the fixed timestamp" : 0,
+						"history store table reads" : 0,
+						"history store table reads missed" : 0,
+						"history store table reads requiring squashed modifies" : 0,
+						"history store table truncation by rollback to stable to remove an unstable update" : 0,
+						"history store table truncation by rollback to stable to remove an update" : 0,
+						"history store table truncation to remove an update" : 0,
+						"history store table truncation to remove range of updates due to key being removed from the data page during reconciliation" : 0,
+						"history store table truncation to remove range of updates due to out-of-order timestamp update on data page" : 0,
+						"history store table writes requiring squashed modifies" : 0,
+						"in-memory page passed criteria to be split" : 10,
+						"in-memory page splits" : 5,
+						"internal pages evicted" : 0,
+						"internal pages split during eviction" : 0,
+						"leaf pages split during eviction" : 2,
+						"modified pages evicted" : 2,
+						"overflow pages read into cache" : 0,
+						"page split during eviction deepened the tree" : 0,
+						"page written requiring history store records" : 0,
+						"pages read into cache" : 0,
+						"pages read into cache after truncate" : 1,
+						"pages read into cache after truncate in prepare state" : 0,
+						"pages requested from the cache" : 210061,
+						"pages seen by eviction walk" : 125,
+						"pages written from cache" : 2472,
+						"pages written requiring in-memory restoration" : 0,
+						"the number of times full update inserted to history store" : 0,
+						"the number of times reverse modify inserted to history store" : 0,
+						"tracked dirty bytes in the cache" : 0,
+						"unmodified pages evicted" : 0
+					},
+					"cache_walk" : {
+						"Average difference between current eviction generation when the page was last considered" : 0,
+						"Average on-disk page image size seen" : 0,
+						"Average time in cache for pages that have been visited by the eviction server" : 0,
+						"Average time in cache for pages that have not been visited by the eviction server" : 0,
+						"Clean pages currently in cache" : 0,
+						"Current eviction generation" : 0,
+						"Dirty pages currently in cache" : 0,
+						"Entries in the root page" : 0,
+						"Internal pages currently in cache" : 0,
+						"Leaf pages currently in cache" : 0,
+						"Maximum difference between current eviction generation when the page was last considered" : 0,
+						"Maximum page size seen" : 0,
+						"Minimum on-disk page image size seen" : 0,
+						"Number of pages never visited by eviction server" : 0,
+						"On-disk page image sizes smaller than a single allocation unit" : 0,
+						"Pages created in memory and never written" : 0,
+						"Pages currently queued for eviction" : 0,
+						"Pages that could not be queued for eviction" : 0,
+						"Refs skipped during cache traversal" : 0,
+						"Size of the root page" : 0,
+						"Total number of pages currently in cache" : 0
+					},
+					"checkpoint-cleanup" : {
+						"pages added for eviction" : 0,
+						"pages removed" : 0,
+						"pages skipped during tree walk" : 2400,
+						"pages visited" : 2456
+					},
+					"compression" : {
+						"compressed page maximum internal page size prior to compression" : 16384,
+						"compressed page maximum leaf page size prior to compression " : 16384,
+						"compressed pages read" : 0,
+						"compressed pages written" : 0,
+						"page written failed to compress" : 0,
+						"page written was too small to compress" : 0
+					},
+					"cursor" : {
+						"Total number of entries skipped by cursor next calls" : 0,
+						"Total number of entries skipped by cursor prev calls" : 0,
+						"Total number of entries skipped to position the history store cursor" : 0,
+						"Total number of times a search near has exited due to prefix config" : 0,
+						"bulk loaded cursor insert calls" : 0,
+						"cache cursors reuse count" : 209997,
+						"close calls that result in cache" : 210000,
+						"create calls" : 7,
+						"cursor next calls that skip due to a globally visible history store tombstone" : 0,
+						"cursor next calls that skip greater than or equal to 100 entries" : 0,
+						"cursor next calls that skip less than 100 entries" : 0,
+						"cursor prev calls that skip due to a globally visible history store tombstone" : 0,
+						"cursor prev calls that skip greater than or equal to 100 entries" : 0,
+						"cursor prev calls that skip less than 100 entries" : 0,
+						"insert calls" : 210000,
+						"insert key and value bytes" : 3568977,
+						"modify" : 0,
+						"modify key and value bytes affected" : 0,
+						"modify value bytes modified" : 0,
+						"next calls" : 0,
+						"open cursor count" : 0,
+						"operation restarted" : 0,
+						"prev calls" : 0,
+						"remove calls" : 0,
+						"remove key bytes removed" : 0,
+						"reserve calls" : 0,
+						"reset calls" : 420000,
+						"search calls" : 0,
+						"search history store calls" : 0,
+						"search near calls" : 0,
+						"truncate calls" : 0,
+						"update calls" : 0,
+						"update key and value bytes" : 0,
+						"update value size change" : 0
+					},
+					"reconciliation" : {
+						"approximate byte size of timestamps in pages written" : 10427376,
+						"approximate byte size of transaction IDs in pages written" : 0,
+						"dictionary matches" : 0,
+						"fast-path pages deleted" : 0,
+						"internal page key bytes discarded using suffix compression" : 4965,
+						"internal page multi-block writes" : 11,
+						"internal-page overflow keys" : 0,
+						"leaf page key bytes discarded using prefix compression" : 4206385,
+						"leaf page multi-block writes" : 27,
+						"leaf-page overflow keys" : 0,
+						"maximum blocks required for a page" : 1,
+						"overflow values written" : 0,
+						"page checksum matches" : 0,
+						"page reconciliation calls" : 60,
+						"page reconciliation calls for eviction" : 0,
+						"pages deleted" : 0,
+						"pages written including an aggregated newest start durable timestamp " : 13,
+						"pages written including an aggregated newest stop durable timestamp " : 0,
+						"pages written including an aggregated newest stop timestamp " : 0,
+						"pages written including an aggregated newest stop transaction ID" : 0,
+						"pages written including an aggregated newest transaction ID " : 0,
+						"pages written including an aggregated oldest start timestamp " : 13,
+						"pages written including an aggregated prepare" : 0,
+						"pages written including at least one prepare" : 0,
+						"pages written including at least one start durable timestamp" : 2427,
+						"pages written including at least one start timestamp" : 2427,
+						"pages written including at least one start transaction ID" : 0,
+						"pages written including at least one stop durable timestamp" : 0,
+						"pages written including at least one stop timestamp" : 0,
+						"pages written including at least one stop transaction ID" : 0,
+						"records written including a prepare" : 0,
+						"records written including a start durable timestamp" : 651711,
+						"records written including a start timestamp" : 651711,
+						"records written including a start transaction ID" : 0,
+						"records written including a stop durable timestamp" : 0,
+						"records written including a stop timestamp" : 0,
+						"records written including a stop transaction ID" : 0
+					},
+					"session" : {
+						"object compaction" : 0,
+						"tiered operations dequeued and processed" : 0,
+						"tiered operations scheduled" : 0,
+						"tiered storage local retention time (secs)" : 0,
+						"tiered storage object size" : 0
+					},
+					"transaction" : {
+						"race to read prepared update retry" : 0,
+						"rollback to stable history store records with stop timestamps older than newer records" : 0,
+						"rollback to stable inconsistent checkpoint" : 0,
+						"rollback to stable keys removed" : 0,
+						"rollback to stable keys restored" : 0,
+						"rollback to stable restored tombstones from history store" : 0,
+						"rollback to stable restored updates from history store" : 0,
+						"rollback to stable skipping delete rle" : 0,
+						"rollback to stable skipping stable rle" : 0,
+						"rollback to stable sweeping history store keys" : 0,
+						"rollback to stable updates removed from history store" : 0,
+						"transaction checkpoints due to obsolete pages" : 0,
+						"update conflicts" : 0
+					}
+				},
+				"amount_1" : {
+					"metadata" : {
+						"formatVersion" : 8
+					},
+					"creationString" : "access_pattern_hint=none,allocation_size=4KB,app_metadata=(formatVersion=8),assert=(commit_timestamp=none,durable_timestamp=none,read_timestamp=none,write_timestamp=off),block_allocation=best,block_compressor=,cache_resident=false,checksum=on,colgroups=,collator=,columns=,dictionary=0,encryption=(keyid=,name=),exclusive=false,extractor=,format=btree,huffman_key=,huffman_value=,ignore_in_memory_cache_size=false,immutable=false,import=(enabled=false,file_metadata=,repair=false),internal_item_max=0,internal_key_max=0,internal_key_truncate=true,internal_page_max=16k,key_format=u,key_gap=10,leaf_item_max=0,leaf_key_max=0,leaf_page_max=16k,leaf_value_max=0,log=(enabled=false),lsm=(auto_throttle=true,bloom=true,bloom_bit_count=16,bloom_config=,bloom_hash_count=8,bloom_oldest=false,chunk_count_limit=0,chunk_max=5GB,chunk_size=10MB,merge_custom=(prefix=,start_generation=0,suffix=),merge_max=15,merge_min=0),memory_page_image_max=0,memory_page_max=5MB,os_cache_dirty_max=0,os_cache_max=0,prefix_compression=true,prefix_compression_min=4,readonly=false,source=,split_deepen_min_child=0,split_deepen_per_child=0,split_pct=90,tiered_object=false,tiered_storage=(auth_token=,bucket=,bucket_prefix=,cache_directory=,local_retention=300,name=,object_target_size=10M),type=file,value_format=u,verbose=[],write_timestamp_usage=none",
+					"type" : "file",
+					"uri" : "statistics:table:index-39-5960004222346171514",
+					"LSM" : {
+						"bloom filter false positives" : 0,
+						"bloom filter hits" : 0,
+						"bloom filter misses" : 0,
+						"bloom filter pages evicted from cache" : 0,
+						"bloom filter pages read into cache" : 0,
+						"bloom filters in the LSM tree" : 0,
+						"chunks in the LSM tree" : 0,
+						"highest merge generation in the LSM tree" : 0,
+						"queries that could have benefited from a Bloom filter that did not exist" : 0,
+						"sleep for LSM checkpoint throttle" : 0,
+						"sleep for LSM merge throttle" : 0,
+						"total size of bloom filters" : 0
+					},
+					"block-manager" : {
+						"allocations requiring file extension" : 231,
+						"blocks allocated" : 231,
+						"blocks freed" : 0,
+						"checkpoint size" : 3735552,
+						"file allocation unit size" : 4096,
+						"file bytes available for reuse" : 0,
+						"file magic number" : 120897,
+						"file major version number" : 1,
+						"file size in bytes" : 3751936,
+						"minor version number" : 0
+					},
+					"btree" : {
+						"btree checkpoint generation" : 0,
+						"btree clean tree checkpoint expiration time" : 0,
+						"btree compact pages reviewed" : 0,
+						"btree compact pages selected to be rewritten" : 0,
+						"btree compact pages skipped" : 0,
+						"btree skipped by compaction as process would not reduce size" : 0,
+						"column-store fixed-size leaf pages" : 0,
+						"column-store internal pages" : 0,
+						"column-store variable-size RLE encoded values" : 0,
+						"column-store variable-size deleted values" : 0,
+						"column-store variable-size leaf pages" : 0,
+						"fixed-record size" : 0,
+						"maximum internal page key size" : 1474,
+						"maximum internal page size" : 16384,
+						"maximum leaf page key size" : 1474,
+						"maximum leaf page size" : 16384,
+						"maximum leaf page value size" : 7372,
+						"maximum tree depth" : 0,
+						"number of key/value pairs" : 0,
+						"overflow pages" : 0,
+						"pages rewritten by compaction" : 0,
+						"row-store empty values" : 0,
+						"row-store internal pages" : 0,
+						"row-store leaf pages" : 0
+					},
+					"cache" : {
+						"bytes currently in the cache" : 17835,
+						"bytes dirty in the cache cumulative" : 0,
+						"bytes read into cache" : 3642,
+						"bytes written from cache" : 3361794,
+						"checkpoint blocked page eviction" : 0,
+						"checkpoint of history store file blocked non-history store page eviction" : 0,
+						"data source pages selected for eviction unable to be evicted" : 0,
+						"eviction gave up due to detecting an out of order on disk value behind the last update on the chain" : 0,
+						"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update" : 0,
+						"eviction gave up due to detecting an out of order tombstone ahead of the selected on disk update after validating the update chain" : 0,
+						"eviction gave up due to detecting out of order timestamps on the update chain after the selected on disk update" : 0,
+						"eviction walk passes of a file" : 0,
+						"eviction walk target pages histogram - 0-9" : 0,
+						"eviction walk target pages histogram - 10-31" : 0,
+						"eviction walk target pages histogram - 128 and higher" : 0,
+						"eviction walk target pages histogram - 32-63" : 0,
+						"eviction walk target pages histogram - 64-128" : 0,
+						"eviction walk target pages reduced due to history store cache pressure" : 0,
+						"eviction walks abandoned" : 0,
+						"eviction walks gave up because they restarted their walk twice" : 0,
+						"eviction walks gave up because they saw too many pages and found no candidates" : 0,
+						"eviction walks gave up because they saw too many pages and found too few candidates" : 0,
+						"eviction walks reached end of tree" : 0,
+						"eviction walks restarted" : 0,
+						"eviction walks started from root of tree" : 0,
+						"eviction walks started from saved location in tree" : 0,
+						"hazard pointer blocked page eviction" : 0,
+						"history store table insert calls" : 0,
+						"history store table insert calls that returned restart" : 0,
+						"history store table out-of-order resolved updates that lose their durable timestamp" : 0,
+						"history store table out-of-order updates that were fixed up by reinserting with the fixed timestamp" : 0,
+						"history store table reads" : 0,
+						"history store table reads missed" : 0,
+						"history store table reads requiring squashed modifies" : 0,
+						"history store table truncation by rollback to stable to remove an unstable update" : 0,
+						"history store table truncation by rollback to stable to remove an update" : 0,
+						"history store table truncation to remove an update" : 0,
+						"history store table truncation to remove range of updates due to key being removed from the data page during reconciliation" : 0,
+						"history store table truncation to remove range of updates due to out-of-order timestamp update on data page" : 0,
+						"history store table writes requiring squashed modifies" : 0,
+						"in-memory page passed criteria to be split" : 0,
+						"in-memory page splits" : 0,
+						"internal pages evicted" : 0,
+						"internal pages split during eviction" : 0,
+						"leaf pages split during eviction" : 1,
+						"modified pages evicted" : 2,
+						"overflow pages read into cache" : 0,
+						"page split during eviction deepened the tree" : 0,
+						"page written requiring history store records" : 0,
+						"pages read into cache" : 1,
+						"pages read into cache after truncate" : 0,
+						"pages read into cache after truncate in prepare state" : 0,
+						"pages requested from the cache" : 0,
+						"pages seen by eviction walk" : 0,
+						"pages written from cache" : 229,
+						"pages written requiring in-memory restoration" : 0,
+						"the number of times full update inserted to history store" : 0,
+						"the number of times reverse modify inserted to history store" : 0,
+						"tracked dirty bytes in the cache" : 0,
+						"unmodified pages evicted" : 0
+					},
+					"cache_walk" : {
+						"Average difference between current eviction generation when the page was last considered" : 0,
+						"Average on-disk page image size seen" : 0,
+						"Average time in cache for pages that have been visited by the eviction server" : 0,
+						"Average time in cache for pages that have not been visited by the eviction server" : 0,
+						"Clean pages currently in cache" : 0,
+						"Current eviction generation" : 0,
+						"Dirty pages currently in cache" : 0,
+						"Entries in the root page" : 0,
+						"Internal pages currently in cache" : 0,
+						"Leaf pages currently in cache" : 0,
+						"Maximum difference between current eviction generation when the page was last considered" : 0,
+						"Maximum page size seen" : 0,
+						"Minimum on-disk page image size seen" : 0,
+						"Number of pages never visited by eviction server" : 0,
+						"On-disk page image sizes smaller than a single allocation unit" : 0,
+						"Pages created in memory and never written" : 0,
+						"Pages currently queued for eviction" : 0,
+						"Pages that could not be queued for eviction" : 0,
+						"Refs skipped during cache traversal" : 0,
+						"Size of the root page" : 0,
+						"Total number of pages currently in cache" : 0
+					},
+					"checkpoint-cleanup" : {
+						"pages added for eviction" : 0,
+						"pages removed" : 0,
+						"pages skipped during tree walk" : 0,
+						"pages visited" : 0
+					},
+					"compression" : {
+						"compressed page maximum internal page size prior to compression" : 16384,
+						"compressed page maximum leaf page size prior to compression " : 16384,
+						"compressed pages read" : 0,
+						"compressed pages written" : 0,
+						"page written failed to compress" : 0,
+						"page written was too small to compress" : 0
+					},
+					"cursor" : {
+						"Total number of entries skipped by cursor next calls" : 0,
+						"Total number of entries skipped by cursor prev calls" : 0,
+						"Total number of entries skipped to position the history store cursor" : 0,
+						"Total number of times a search near has exited due to prefix config" : 0,
+						"bulk loaded cursor insert calls" : 210000,
+						"cache cursors reuse count" : 0,
+						"close calls that result in cache" : 0,
+						"create calls" : 1,
+						"cursor next calls that skip due to a globally visible history store tombstone" : 0,
+						"cursor next calls that skip greater than or equal to 100 entries" : 0,
+						"cursor next calls that skip less than 100 entries" : 0,
+						"cursor prev calls that skip due to a globally visible history store tombstone" : 0,
+						"cursor prev calls that skip greater than or equal to 100 entries" : 0,
+						"cursor prev calls that skip less than 100 entries" : 0,
+						"insert calls" : 0,
+						"insert key and value bytes" : 0,
+						"modify" : 0,
+						"modify key and value bytes affected" : 0,
+						"modify value bytes modified" : 0,
+						"next calls" : 0,
+						"open cursor count" : 0,
+						"operation restarted" : 0,
+						"prev calls" : 0,
+						"remove calls" : 0,
+						"remove key bytes removed" : 0,
+						"reserve calls" : 0,
+						"reset calls" : 0,
+						"search calls" : 0,
+						"search history store calls" : 0,
+						"search near calls" : 0,
+						"truncate calls" : 0,
+						"update calls" : 0,
+						"update key and value bytes" : 0,
+						"update value size change" : 0
+					},
+					"reconciliation" : {
+						"approximate byte size of timestamps in pages written" : 0,
+						"approximate byte size of transaction IDs in pages written" : 0,
+						"dictionary matches" : 0,
+						"fast-path pages deleted" : 0,
+						"internal page key bytes discarded using suffix compression" : 2295,
+						"internal page multi-block writes" : 0,
+						"internal-page overflow keys" : 0,
+						"leaf page key bytes discarded using prefix compression" : 13270,
+						"leaf page multi-block writes" : 1,
+						"leaf-page overflow keys" : 0,
+						"maximum blocks required for a page" : 0,
+						"overflow values written" : 0,
+						"page checksum matches" : 0,
+						"page reconciliation calls" : 1,
+						"page reconciliation calls for eviction" : 1,
+						"pages deleted" : 0,
+						"pages written including an aggregated newest start durable timestamp " : 0,
+						"pages written including an aggregated newest stop durable timestamp " : 0,
+						"pages written including an aggregated newest stop timestamp " : 0,
+						"pages written including an aggregated newest stop transaction ID" : 0,
+						"pages written including an aggregated newest transaction ID " : 0,
+						"pages written including an aggregated oldest start timestamp " : 0,
+						"pages written including an aggregated prepare" : 0,
+						"pages written including at least one prepare" : 0,
+						"pages written including at least one start durable timestamp" : 0,
+						"pages written including at least one start timestamp" : 0,
+						"pages written including at least one start transaction ID" : 0,
+						"pages written including at least one stop durable timestamp" : 0,
+						"pages written including at least one stop timestamp" : 0,
+						"pages written including at least one stop transaction ID" : 0,
+						"records written including a prepare" : 0,
+						"records written including a start durable timestamp" : 0,
+						"records written including a start timestamp" : 0,
+						"records written including a start transaction ID" : 0,
+						"records written including a stop durable timestamp" : 0,
+						"records written including a stop timestamp" : 0,
+						"records written including a stop transaction ID" : 0
+					},
+					"session" : {
+						"object compaction" : 0,
+						"tiered operations dequeued and processed" : 0,
+						"tiered operations scheduled" : 0,
+						"tiered storage local retention time (secs)" : 0,
+						"tiered storage object size" : 0
+					},
+					"transaction" : {
+						"race to read prepared update retry" : 0,
+						"rollback to stable history store records with stop timestamps older than newer records" : 0,
+						"rollback to stable inconsistent checkpoint" : 0,
+						"rollback to stable keys removed" : 0,
+						"rollback to stable keys restored" : 0,
+						"rollback to stable restored tombstones from history store" : 0,
+						"rollback to stable restored updates from history store" : 0,
+						"rollback to stable skipping delete rle" : 0,
+						"rollback to stable skipping stable rle" : 0,
+						"rollback to stable sweeping history store keys" : 0,
+						"rollback to stable updates removed from history store" : 0,
+						"transaction checkpoints due to obsolete pages" : 0,
+						"update conflicts" : 0
+					}
+				}
+			},
+			"indexBuilds" : [ ],
+			"totalIndexSize" : 11448320,
+			"totalSize" : 18526208,
+			"indexSizes" : {
+				"_id_" : 7696384,
+				"amount_1" : 3751936
+			},
+			"scaleFactor" : 1,
+			"ok" : 1,
+			"$gleStats" : {
+				"lastOpTime" : {
+					"ts" : Timestamp(1637401545, 5),
+					"t" : NumberLong(1)
+				},
+				"electionId" : ObjectId("7fffffff0000000000000001")
+			},
+			"lastCommittedOpTime" : Timestamp(1637401545, 5),
+			"$configServerState" : {
+				"opTime" : {
+					"ts" : Timestamp(1637401553, 2),
+					"t" : NumberLong(-1)
+				}
+			},
+			"$clusterTime" : {
+				"clusterTime" : Timestamp(1637401553, 2),
+				"signature" : {
+					"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+					"keyId" : NumberLong(0)
+				}
+			},
+			"$configTime" : Timestamp(1637401553, 2),
+			"$topologyTime" : Timestamp(1637399566, 1),
+			"operationTime" : Timestamp(1637401545, 5)
+		}
+	},
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637401553, 2),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637401545, 5)
+}
+mongos> sh.shardCollection("bank.tickets",{amount: 1 })
+{
+	"collectionsharded" : "bank.tickets",
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637401564, 51),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637401564, 47)
+}
+mongos> use admin
+switched to db admin
+mongos> db.runCommand({shardCollection: "bank.tickets", key: {amount: 1}})
+{
+	"collectionsharded" : "bank.tickets",
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637401586, 10),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637401586, 6)
+}
+mongos> sh.status()
+--- Sharding Status --- 
+  sharding version: {
+  	"_id" : 1,
+  	"minCompatibleVersion" : 5,
+  	"currentVersion" : 6,
+  	"clusterId" : ObjectId("6198b8650226898cf5235e1d")
+  }
+  shards:
+        {  "_id" : "rs1",  "host" : "rs1/10.100.100.83:21117,10.100.100.83:21217,10.100.100.83:21317",  "state" : 1,  "topologyTime" : Timestamp(1637399330, 1) }
+        {  "_id" : "rs2",  "host" : "rs2/10.100.100.83:22117,10.100.100.83:22217,10.100.100.83:22317",  "state" : 1,  "topologyTime" : Timestamp(1637399566, 1) }
+  active mongoses:
+        "5.0.4" : 1
+  autosplit:
+        Currently enabled: yes
+  balancer:
+        Currently enabled: yes
+        Currently running: no
+        Failed balancer rounds in last 5 attempts: 0
+        Migration results for the last 24 hours: 
+                519 : Success
+  databases:
+        {  "_id" : "bank",  "primary" : "rs2",  "partitioned" : true,  "version" : {  "uuid" : UUID("6d5c4b68-ba4e-4c32-9c2c-39d870c3186c"),  "timestamp" : Timestamp(1637399639, 36),  "lastMod" : 1 } }
+                bank.tickets
+                        shard key: { "amount" : 1 }
+                        unique: false
+                        balancing: true
+                        chunks:
+                                rs1	7
+                                rs2	8
+                        { "amount" : { "$minKey" : 1 } } -->> { "amount" : 6.676241371455916 } on : rs1 Timestamp(2, 0) 
+                        { "amount" : 6.676241371455916 } -->> { "amount" : 13.361574393843224 } on : rs1 Timestamp(3, 0) 
+                        { "amount" : 13.361574393843224 } -->> { "amount" : 20.055353937130395 } on : rs1 Timestamp(4, 0) 
+                        { "amount" : 20.055353937130395 } -->> { "amount" : 26.722086516672128 } on : rs1 Timestamp(5, 0) 
+                        { "amount" : 26.722086516672128 } -->> { "amount" : 33.34857434232913 } on : rs1 Timestamp(6, 0) 
+                        { "amount" : 33.34857434232913 } -->> { "amount" : 40.036477216544455 } on : rs1 Timestamp(7, 0) 
+                        { "amount" : 40.036477216544455 } -->> { "amount" : 46.717665001373945 } on : rs1 Timestamp(8, 0) 
+                        { "amount" : 46.717665001373945 } -->> { "amount" : 53.40127485245573 } on : rs2 Timestamp(8, 1) 
+                        { "amount" : 53.40127485245573 } -->> { "amount" : 59.989936640105924 } on : rs2 Timestamp(1, 8) 
+                        { "amount" : 59.989936640105924 } -->> { "amount" : 66.67172937974864 } on : rs2 Timestamp(1, 9) 
+                        { "amount" : 66.67172937974864 } -->> { "amount" : 73.36073221352373 } on : rs2 Timestamp(1, 10) 
+                        { "amount" : 73.36073221352373 } -->> { "amount" : 80.0443084443101 } on : rs2 Timestamp(1, 11) 
+                        { "amount" : 80.0443084443101 } -->> { "amount" : 86.67231960776132 } on : rs2 Timestamp(1, 12) 
+                        { "amount" : 86.67231960776132 } -->> { "amount" : 93.33699802202673 } on : rs2 Timestamp(1, 13) 
+                        { "amount" : 93.33699802202673 } -->> { "amount" : { "$maxKey" : 1 } } on : rs2 Timestamp(1, 14) 
+        {  "_id" : "config",  "primary" : "config",  "partitioned" : true }
+                config.system.sessions
+                        shard key: { "_id" : 1 }
+                        unique: false
+                        balancing: true
+                        chunks:
+                                rs1	512
+                                rs2	512
+                        too many chunks to print, use verbose if you want to force print
+mongos> sh.balancerCollectionStatus("bank.tickets")
+{
+	"balancerCompliant" : true,
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637401604, 2),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637401604, 2)
+}
+mongos> sh.splitFind( "bank.tickets", { "amount": "50" } )
+{
+	"ok" : 1,
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1637401617, 9),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	},
+	"operationTime" : Timestamp(1637401617, 9)
+}
+mongos> 
+
