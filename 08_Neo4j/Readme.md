@@ -16,6 +16,8 @@
 <br/>
 ##### create (:human {name: 'Alina', age: '25', property: 'cat'})
 
+<br/>
+
 ##### match (one:human {name: 'Diana'})
 ##### match (two:human {name: 'Natasha'})
 ##### create (two) -[:Friends]->(one)
