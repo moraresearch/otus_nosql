@@ -1,0 +1,119 @@
+﻿[
+  {
+    "n": {
+"identity": 0,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Valera",
+"property": "buzzkill",
+"age": "38"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 1,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Marina",
+"property": "boxer",
+"age": "25"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 2,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Kirill",
+"property": "god",
+"age": "25"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 3,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Diana",
+"property": "goddes",
+"age": "25"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 4,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Vitek",
+"property": "badass",
+"age": "27"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 5,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Natasha",
+"property": "qa-junior",
+"age": "27"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 6,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Alina",
+"property": "cat",
+"age": "25"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 7,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Natasha",
+"property": "cube",
+"age": "23"
+      }
+    }
+  },
+  {
+    "n": {
+"identity": 8,
+"labels": [
+        "human"
+      ],
+"properties": {
+"name": "Roma",
+"property": "anykey",
+"age": "37"
+      }
+    }
+  }
+]
